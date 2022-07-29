@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 
 #define SIZE_LIST_USER 10
 #define SIZE_NAME 15
@@ -20,7 +21,8 @@ int find(struct User listUser[SIZE_LIST_USER], int, char *);
 int show(struct User listUser[SIZE_LIST_USER], int);
 
 int main(){
-    struct User listUser[SIZE_LIST_USER] = {'\0'};
+    struct User *listUser;
+    listUser = malloc(sizeof(struct User) * SIZE_LIST_USER);
     char findName[SIZE_NAME];
     char menu[] = "Меню:\n1 - Добавить запись\n2 - Посмотреть запись\n3 - Найти пользователя (по имени)\n4 - Удалить запись\n5 - Выйти";
     int index;
@@ -39,8 +41,7 @@ int main(){
                 //add
                 case 1:
                         system("clear");
-                        if(add(listUser, SIZE_LIST_USER) < 0)
-                        printf("Список заполнен\n");
+                        add(listUser, SIZE_LIST_USER);
                         system("clear");
                         break;
                 
@@ -75,10 +76,12 @@ int main(){
                 //exit
                 case 5:
                         system("clear");
-                        return 0;
+                        goto finally;
                         break;
             }
     }
+    finally:
+        free(listUser);
     return 0;
 };
 
