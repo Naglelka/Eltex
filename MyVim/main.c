@@ -156,7 +156,6 @@ int main(void)
     savetty();
     signal(SIGWINCH, sig_winch);
     curs_set(TRUE);
-    echo();
     keypad(wnd, TRUE);
     mousemask(BUTTON1_CLICKED, NULL);
     while(1)
