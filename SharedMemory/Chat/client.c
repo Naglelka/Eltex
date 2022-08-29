@@ -30,7 +30,7 @@ int main() {
 
   fd = shm_open(NAME, O_RDWR, 0777);
   info = mmap(NULL, sizeof(shm), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  close(fd);
+
   userName = calloc(30, sizeof(char));
   printf("Write your UserName: ");
   fgets(userName, 30, stdin);
@@ -73,6 +73,9 @@ int main() {
   free(outputMessage);
   free(userName);
   free(message);
+  
+  close(fd);
+  shm_unlink(NAME);
 
   exit(EXIT_SUCCESS);
 }

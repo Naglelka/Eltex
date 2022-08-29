@@ -29,7 +29,7 @@ int main()
   printf("Server %s start\n", NAME);
   info = mmap(NULL, sizeof(shm), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   ftruncate(fd, sizeof(shm));
-  close(fd);
+
   info->count = 0;
   info->countClient = 0;
   sem_init(&info->mutex, 1, 10);
@@ -46,6 +46,7 @@ int main()
     }
   }
   printf("Server %s unlink\n", NAME);
+  close(fd);
   shm_unlink(NAME);
   exit(EXIT_SUCCESS);
 }
