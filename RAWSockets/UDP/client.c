@@ -9,11 +9,13 @@
 #include <netinet/in.h>
 #include <netinet/udp.h>
 #include <netinet/ip.h>
+#include <arpa/inet.h>
 
 #define SIZE 255
 #define DATAGRAM_LENGTH 263
 #define MY_PORT 7000
 #define PORT 7777
+#define ADDRESS "127.0.0.1"
 
 int main()
 {
@@ -22,7 +24,7 @@ int main()
 
     server.sin_family = AF_INET;
     server.sin_port = htons(PORT);
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    server.sin_addr.s_addr = inet_addr(ADDRESS);
 
     fd = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
     if (fd == -1) {
@@ -34,6 +36,7 @@ int main()
         socklen_t len = sizeof(struct sockaddr_in);
         int recvByte = 0;
         int sendByte = 0;
+        //int length;
 
         printf("Enter your message: ");
         char *message = malloc((SIZE - len) * sizeof(char));
@@ -41,6 +44,8 @@ int main()
 	    fgets(message, SIZE - len, stdin);
         char *packet = malloc(SIZE * sizeof(char));
 	    memmove(packet + 8, message, strlen(message) - 1);
+
+        //length = strlen(message) - 1 + sizeof(struct udphdr);
 
         struct udphdr *udpHeader;
         udpHeader = (struct udphdr *)packet;
