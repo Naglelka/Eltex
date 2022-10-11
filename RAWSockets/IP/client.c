@@ -63,8 +63,10 @@ int main()
         ipHeader->frag_off = 0;
         ipHeader->ttl = 255;
         ipHeader->protocol = IPPROTO_UDP;
-        ipHeader->saddr = INADDR_ANY;
+        ipHeader->check = 0;
+        ipHeader->saddr = inet_addr("127.0.0.1");
         ipHeader->daddr = server.sin_addr.s_addr;
+        ipHeader->tot_len = 0;
 
         struct udphdr *udpHeader;
         udpHeader = (struct udphdr *)(packet + sizeof(struct iphdr));
