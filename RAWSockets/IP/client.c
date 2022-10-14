@@ -43,7 +43,7 @@ int main()
         socklen_t len = sizeof(struct sockaddr_in);
         int recvByte = 0;
         int sendByte = 0;
-        int length;
+        int length = 0;
 
         printf("Enter your message: ");
         char *message = malloc((SIZE - len) * sizeof(char));
@@ -75,7 +75,7 @@ int main()
 	    udpHeader->check = 0;
 	    udpHeader->len = htons(length);
 
-        sendByte = sendto(fd, packet, length, 0, (struct sockaddr *)&server, len);
+        sendByte = sendto(fd, packet, length + sizeof(struct iphdr), 0, (struct sockaddr *)&server, len);
         if(sendByte == -1) {
             perror("Send error");
             exit(EXIT_FAILURE);
