@@ -17,8 +17,8 @@
 #define SIZE 255
 #define MY_PORT 7000
 #define PORT 7777
-#define ADDRESS_SERVER "192.168.0.7"
-#define ADDRESS_CLIENT "192.168.0.9"
+#define ADDRESS_SERVER "192.168.0.9"
+#define ADDRESS_CLIENT "192.168.0.12"
 
 unsigned short csum(unsigned short *ptr,int nbytes)
 {
@@ -26,19 +26,19 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 	unsigned short oddbyte;
 	register short answer;
 
-	while(nbytes > 1) {
-		sum += *ptr++;
-		nbytes -= 2;
+	while(nbytes>1) {
+		sum+=*ptr++;
+		nbytes-=2;
 	}
-	if(nbytes == 1) {
-		oddbyte = 0;
-		*((u_char*)&oddbyte) = *(u_char*)ptr;
-		sum += oddbyte;
+	if(nbytes==1) {
+		oddbyte=0;
+		*((u_char*)&oddbyte)=*(u_char*)ptr;
+		sum+=oddbyte;
 	}
 
-	sum = (sum >> 16)+(sum & 0xffff);
-	sum = sum + (sum >> 16);
-	answer = (short)~sum;
+	sum = (sum>>16)+(sum & 0xffff);
+	sum = sum + (sum>>16);
+	answer=(short)~sum;
 	
 	return(answer);
 }
@@ -54,6 +54,7 @@ int main()
     int flag = 1;
     int res = 0;
 
+    memset(&server, 0, sizeof(server));
     server.sll_family = AF_PACKET;
     server.sll_ifindex = if_nametoindex("enp0s3");
     server.sll_halen = 6;
@@ -74,9 +75,9 @@ int main()
         printf("Enter your message: ");
         char *message = malloc((SIZE - len) * sizeof(char));
         memset(message, 0, SIZE - len);
-	    fgets(message, SIZE - len, stdin);
+	fgets(message, SIZE - len, stdin);
         char *packet = malloc(SIZE * sizeof(char));
-	    memmove(packet + sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr), message, strlen(message) - 1);
+	memmove(packet + sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct udphdr), message, strlen(message) - 1);
 
         length = strlen(message) - 1 + sizeof(struct udphdr);
 
@@ -97,18 +98,18 @@ int main()
         ipHeader->frag_off = 0;
         ipHeader->ttl = 255;
         ipHeader->protocol = IPPROTO_UDP;
-        ipHeader->saddr = inet_addr(ADDRESS_SERVER);
-        ipHeader->daddr = inet_addr(ADDRESS_CLIENT);
+        ipHeader->saddr = inet_addr(ADDRESS_CLIENT);
+        ipHeader->daddr = inet_addr(ADDRESS_SERVER);
         ipHeader->tot_len = htons(ipHeader->ihl * 4 + sizeof(struct udphdr) + strlen(message) - 1);
-	    ipHeader->check = 0;
-	    ipHeader->check = csum((unsigned short *) ipHeader, ipHeader->ihl * 4);
+	ipHeader->check = 0;
+	ipHeader->check = csum((unsigned short *) ipHeader, ipHeader->ihl * 4);
 
         struct udphdr *udpHeader;
         udpHeader = (struct udphdr *)(packet + sizeof(struct ether_header) + sizeof(struct iphdr));
         udpHeader->source = htons(MY_PORT);
         udpHeader->dest = htons(PORT);
-	    udpHeader->check = 0;
-	    udpHeader->len = htons(length);
+	udpHeader->check = 0;
+	udpHeader->len = htons(length);
 
         sendByte = sendto(fd, packet, length + sizeof(struct ether_header) + sizeof(struct iphdr), 0, (struct sockaddr *)&server, len);
         if(sendByte == -1) {
@@ -123,30 +124,19 @@ int main()
                 perror("Recv error");
                 exit(EXIT_FAILURE);
             }
-
-            etherHeader = (struct ether_header *) packet;
-            short int correctMac = 1;
-            for (int i = 0; i < 6; i++) {
-                if (etherHeader->ether_dhost[i] != macSource[i]) {
-                    correctMac = 0;
-                    break;
-                }
-            }
-            if (correctMac == 0) 
-                continue;
-
             ipHeader = (struct iphdr *) (packet + sizeof(struct ether_header));
             struct in_addr addr;
             addr.s_addr = ipHeader->daddr;
             if (strcmp(ADDRESS_CLIENT, inet_ntoa(addr)) != 0)
                 continue;
 
-		    udpHeader = (struct udphdr *) (packet + sizeof(struct ether_header) +
-		             ipHeader->ihl * 4);     
+	    udpHeader = (struct udphdr *) (packet + sizeof(struct ether_header) + ipHeader->ihl * 4);    
             if (ntohs(udpHeader->dest) != MY_PORT) {
                 continue; 
-            } else if (ntohs(udpHeader->dest) == MY_PORT) {
-                printf("Received message: %s; Number of bytes: %d\n", packet + sizeof(struct ether_header) + ipHeader->ihl * 4 + sizeof(struct udphdr), recvByte);
+            } 
+
+            else if (ntohs(udpHeader->dest) == MY_PORT) {
+                printf("Sent message: %s; Number of bytes: %d\n", packet + sizeof(struct ether_header) + ipHeader->ihl * 4 + sizeof(struct udphdr), recvByte);
                 break;
 		    }
         }
